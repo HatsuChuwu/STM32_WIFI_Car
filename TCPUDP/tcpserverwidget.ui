@@ -529,7 +529,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>小车1号</string>
+    <string>小车1</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_15">
@@ -542,7 +542,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>小车2号</string>
+    <string>小车2</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_16">
@@ -555,7 +555,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>小车3号</string>
+    <string>小车3</string>
    </property>
   </widget>
   <widget class="Line" name="line_5">
