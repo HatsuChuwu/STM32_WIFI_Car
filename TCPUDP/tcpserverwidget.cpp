@@ -301,17 +301,19 @@ void TCPServerWidget::on_btn_OPEN_LED0_clicked()
     sendStr[1]=0xCC;
     sendStr[2]=0x01;//设备ID DEV_ID
     sendStr[3]=0x01;//命令ID CMD_ID
-    if(ui->btn_OPEN_LED0->text()=="打开")
+    if(ui->btn_OPEN_LED0->text() == "打开")
     {
-        sendStr[4]=0x01;
+        sendStr[4] = 0x01;
         ui->btn_OPEN_LED0->setText("关闭");
-        ui->btn_OPEN_LED0->setStyleSheet(QString("background-color:") + "green");
-    }else if(ui->btn_OPEN_LED0->text()=="关闭")
+        ui->btn_OPEN_LED0->setStyleSheet("background-color: green");
+    }
+    else if(ui->btn_OPEN_LED0->text() == "关闭")
     {
-        sendStr[4]=0x00;
+        sendStr[4] = 0x00;
         ui->btn_OPEN_LED0->setText("打开");
-        ui->btn_OPEN_LED0->setStyleSheet(QString("background-color:") + "white");
-    }else
+        ui->btn_OPEN_LED0->setStyleSheet("");  // 清除样式表
+    }
+        else
     {
         return;
     }
