@@ -185,8 +185,13 @@ void TCPServerWidget::on_clear_clicked() {
  * @brief 打印状态信息
  * @param package 数据包
  */
+
 void TCPServerWidget::PrintState(QByteArray package)
 {
+    if (package.size() < 2) { // 确保有足够的数据来判断包头
+        return;
+    }
+
     char *buf = package.data();
     int len = package.size();
     unsigned int data;
@@ -198,6 +203,11 @@ void TCPServerWidget::PrintState(QByteArray package)
     {
         return;
     }
+
+    if (len < 4) { // 确保有足够的数据来计算CRC
+        return;
+    }
+
     Rcrc=crc16_ibm(package, len-2);//计算数据包的CRC校验值
     //检查 CRC 校验值是否正确
     if(((package.at(len-2)&0xff)!=((Rcrc>>8)&0xff)) || ((package.at(len-1)&0xff)!=(Rcrc&0xff)))//CRC校验错误
@@ -207,7 +217,7 @@ void TCPServerWidget::PrintState(QByteArray package)
 
     //设备ID
     data = ((unsigned char)buf[POS_DEV_ID])&0xff;//从数据包位置（POS_DEV_ID）读取一个字节的数据，并将其转换为无符号整数
-    rbytes=rbytes.asprintf("%d",data);//使用asprintf函数将设备ID格式化为字符串
+    rbytes = QString::number(data, 'f', 0); // 保留0位小数，即舍弃小数部分，将数据格式化为字符串
     switch(data){
     case 1:
         ui->label_DEV_ID->setText(rbytes);
@@ -225,7 +235,7 @@ void TCPServerWidget::PrintState(QByteArray package)
     //包计数器
     //从数据包的指定位置（POS_PKG_CNT）读取一个字节的数据，并将其显示在标签上
     data = ((unsigned char)buf[POS_PKG_CNT]) & 0xff;
-    rbytes = rbytes.asprintf("%d", data);
+    rbytes = QString::number(data, 'f', 0); 
     switch (data) {
     case 1:
         ui->label_PACKET_CNT->setText(rbytes);
@@ -241,14 +251,13 @@ void TCPServerWidget::PrintState(QByteArray package)
     }
 
     //电池电压
-    /**在这段代码中，高字节乘以256是因为在处理16位数据时，通常将数据分为高字节和低字节两部分。
-     * 每个字节有8位，所以16位数据需要两个字节来表示
-     * 当从数据包中读取电池电压的高字节和低字节时，我们需要将它们组合成一个16位的值。为了实现这一点，我们将高字节左移8位（即乘以256，因为2^8 = 256），然后加上低字节
-     * 在二进制表示中，左移8位相当于在数值的左侧添加8个0，这为低字节腾出了空间，使得我们可以将两个字节的值合并成一个16位的值
-     * 低字节不需要乘以256，因为它已经是数据的最低有效位，直接加上高字节左移后的值就可以得到完整的16位数据
-     * 总结一下，高字节乘以256是为了将其放置在16位数据的高8位位置，而低字节保持不变，直接放在低8位位置，这样就可以正确地组合成一个16位的值
-     */
-    data = ((unsigned char)buf[POS_BATT_VOLT_H]*256)+(unsigned char)buf[POS_BATT_VOLT_L];//通过将高字节乘以256并加上低字节，可以得到一个16位的值，代表电池电压原始测量值
+    //在这段代码中，高字节乘以256是因为在处理16位数据时，通常将数据分为高字节和低字节两部分。
+    //每个字节有8位，所以16位数据需要两个字节来表示
+    //当从数据包中读取电池电压的高字节和低字节时，我们需要将它们组合成一个16位的值。为了实现这一点，我们将高字节左移8位（即乘以256，因为2^8 = 256），然后加上低字节
+    //在二进制表示中，左移8位相当于在数值的左侧添加8个0，这为低字节腾出了空间，使得我们可以将两个字节的值合并成一个16位的值
+    //低字节不需要乘以256，因为它已经是数据的最低有效位，直接加上高字节左移后的值就可以得到完整的16位数据
+    //总结一下，高字节乘以256是为了将其放置在16位数据的高8位位置，而低字节保持不变，直接放在低8位位置，这样就可以正确地组合成一个16位的值
+    data = ((unsigned char)buf[POS_BATT_VOLT_H]*256)+(unsigned char)buf[POS_BATT_VOLT_L];//计算电池电压原始测量值
     float_data = (float)(3.3*2*data/4096);//将原始测量值转换为实际的电压值，3.3是参考电压，2是因为使用了分压电路（5V电池，2个10k分压），4096是ADC的分辨率
     rbytes=rbytes.asprintf("%5.3f",float_data);//使用asprintf函数将电池电压格式化为字符串，保留3位小数
     switch (data) {
@@ -265,6 +274,7 @@ void TCPServerWidget::PrintState(QByteArray package)
         break;
     }
 }
+
 /**
  * @brief 计算 CRC16-IBM 校验值
  * @param crcdata 数据
