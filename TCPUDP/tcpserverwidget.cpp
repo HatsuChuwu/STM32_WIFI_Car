@@ -35,7 +35,7 @@ TCPServerWidget::TCPServerWidget(QWidget *parent)
             }
         }
         ///////////////////////////////////////////////////////////////////////
-        ////// 当客户端断开连接时，更新日志并从客户端列表中移除该客户端////////////////
+        ////// 当客户端断开连接时，更新日志并从客户端列表中移除该客户端/////////////
         connect(tcpSocket, &QTcpSocket::disconnected, [=]() {
             appendLog(ui->textEdit,
                       QString("%1:%2 disconnected")
@@ -74,6 +74,7 @@ TCPServerWidget::TCPServerWidget(QWidget *parent)
             appendLog(ui->textEdit,
                       QString("%1:%2:%3").arg(ip).arg(port).arg(QString(data)));
         });
+        
         /*connect(tcpSocket, &QTcpSocket::readyRead, [=]()
         {
             QByteArray data = (ui->toHex->isChecked())
@@ -83,6 +84,7 @@ TCPServerWidget::TCPServerWidget(QWidget *parent)
                       QString("%1:%2:%3").arg(ip).arg(port).arg(QString(data)));
              PrintState(data);
         });*/
+
         ////////////将新连接的客户端添加到客户端列表中////////////////
         m_Clients.append(tcpSocket);
         //////在客户端表格中插入新行，显示客户端的 IP 地址和端口号//////
