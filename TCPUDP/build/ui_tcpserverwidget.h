@@ -79,7 +79,10 @@ public:
         TCPServerWidget->resize(900, 600);
         toHex = new QCheckBox(TCPServerWidget);
         toHex->setObjectName("toHex");
-        toHex->setGeometry(QRect(360, 110, 51, 30));
+        toHex->setGeometry(QRect(360, 110, 61, 31));
+        toHex->setCursor(QCursor(Qt::CursorShape::PointingHandCursor));
+        toHex->setAutoFillBackground(false);
+        toHex->setTristate(false);
         localIp = new QComboBox(TCPServerWidget);
         localIp->setObjectName("localIp");
         localIp->setGeometry(QRect(10, 10, 161, 30));
