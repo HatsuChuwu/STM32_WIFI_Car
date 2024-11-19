@@ -1,19 +1,8 @@
 /**
  ****************************************************************************************************
- * @file        atk_mw8266d.c
- * @author      正点原子团队(ALIENTEK)
- * @version     V1.0
- * @date        2022-06-21
- * @brief       ATK-MW8266D模块驱动代码
- * @license     Copyright (c) 2020-2032, 广州市星翼电子科技有限公司
- ****************************************************************************************************
  * @attention
  *
  * 实验平台:正点原子 MiniSTM32 V4开发板
- * 在线视频:www.yuanzige.com
- * 技术论坛:www.openedv.com
- * 公司网址:www.alientek.com
- * 购买地址:openedv.taobao.com
  *
  ****************************************************************************************************
  */
@@ -39,6 +28,12 @@
  */
 uint8_t RECV_FLAG;
 
+/**
+ * @brief 执行查询状态操作
+ *
+ * 该函数负责构建一个查询状态的数据包，并通过UART发送出去。
+ * 数据包包含包头、设备ID、包计数器和校验码。
+ */
 void do_query_state(void)
 {
 	uint8_t len=STAT_PACKET_LENGTH;//数据包长度，不包括包头，但是包括校验码
@@ -59,29 +54,61 @@ void do_query_state(void)
 	PKG_CNT = PKG_CNT+1;//包计数器+1
 }
 
+/**
+ * @brief 对MW8266D硬件进行复位
+ *
+ * 该函数通过操作GPIO引脚对MW8266D模块进行硬件复位。
+ *
+ * @note 复位操作分为两步：
+ *       1. 将WIFI_RST引脚拉低持续100毫秒。
+ *       2. 将WIFI_RST引脚拉高持续2000毫秒。
+ */
 void atk_mw8266d_hw_reset(void)
 {
+    // 将WIFI模块的重置引脚设置为低电平，以进行硬件重置
     HAL_GPIO_WritePin(WIFI_RST_GPIO_Port, WIFI_RST_Pin, GPIO_PIN_RESET);
+    // 延时100毫秒，确保重置信号生效
     HAL_Delay(100);
+    // 将WIFI模块的重置引脚设置为高电平，结束重置
     HAL_GPIO_WritePin(WIFI_RST_GPIO_Port, WIFI_RST_Pin, GPIO_PIN_SET);
+    // 延时2000毫秒，等待WIFI模块启动
     HAL_Delay(2000);
 }
+/**
+ * @brief 接收应答信号
+ *
+ * 在指定超时时间内，不断检查USART2接收缓冲区是否有数据。
+ * 如果接收到数据，则通过USART1发送该数据，并检查是否包含"OK"字符串。
+ * 如果在超时时间内收到包含"OK"的应答，则返回成功状态码；否则返回超时状态码。
+ *
+ * @param timeout 超时时间（单位：毫秒）
+ * @return 如果成功接收到包含"OK"的应答，返回ATK_MW8266D_EOK；如果超时则返回ATK_MW8266D_ETIMEOUT。
+ */
 uint8_t recv_ack(uint32_t timeout)
 {
+	// 循环直到超时
 	while (timeout > 0)
   {
+		// 检查USART2接收缓冲区是否接收到数据
 		if(usart2.USART_RX_STA&0x8000)
 		{
+			// 将接收到的数据通过USART1发送出去
 			usart1.send_packet((unsigned char *)usart2.receive_buffer, usart2.USART_RX_STA&0x3fff);
+			// 清除接收标志
 			usart2.USART_RX_STA=0;//清除接收标志
+			// 检查接收到的数据是否包含"OK"
 			if (strstr((const char *)usart2.receive_buffer, "OK") != NULL)
 			{
+				// 如果包含"OK"，则返回成功状态
 				return ATK_MW8266D_EOK;
 			}
 		}
+		// 超时时间减1
 		timeout--;
+		// 延时1毫秒
     HAL_Delay(1);
   }
+	// 如果超时，则返回超时状态
 	return ATK_MW8266D_ETIMEOUT;
 }
 
@@ -90,30 +117,52 @@ uint8_t recv_ack(uint32_t timeout)
  * @param       baudrate: ATK-MW8266D UART通讯波特率
  * @retval      ATK_MW8266D_EOK  : ATK-MW8266D初始化成功，函数执行成功
  *              ATK_MW8266D_ERROR: ATK-MW8266D初始化失败，函数执行失败
+ * @return      返回0表示初始化成功，否则返回非零值表示初始化失败。
  */
 uint8_t atk_mw8266d_init(void)
 {
+  // ATK-MW8266D硬件复位
   atk_mw8266d_hw_reset();                         /* ATK-MW8266D硬件复位 */
-	HAL_Delay(10000);
-	//usart2.printf("AT\r\n");
-	//HAL_Delay(1000);
-	usart2.printf("ATE0\r\n");
-	HAL_Delay(1000);
-	usart2.printf("AT+CWMODE=1\r\n");
-	HAL_Delay(2000);
-	usart2.printf("AT+CWJAP=\"HUAWEI-wwwit\",\"12345678\"\r\n");
-	HAL_Delay(15000);
-	usart2.printf("AT+CIFSR\r\n");
-	HAL_Delay(5000);
-	usart2.printf("AT+CIPSTART=\"TCP\",\"192.168.3.4\",5555\r\n");
-	HAL_Delay(10000);
-	usart2.printf("AT+CIPMODE=1\r\n");
-	HAL_Delay(1000);
-	usart2.printf("AT+CIPSEND\r\n");
-	HAL_Delay(1000);
-	//usart2.printf("HELLO!\r\n");
-	RECV_FLAG = 1;
-	return 0;
+
+  // 等待10秒，确保复位完成
+  HAL_Delay(10000);
+
+  // 发送ATE0指令，关闭回显
+  usart2.printf("ATE0\r\n");
+  HAL_Delay(1000);
+
+  // 设置WiFi模块为STA模式
+  usart2.printf("AT+CWMODE=1\r\n");
+  HAL_Delay(2000);
+
+  // 连接到指定的WiFi网络
+  usart2.printf("AT+CWJAP=\"Yuzusoft\",\"20041030\"\r\n");
+  HAL_Delay(15000);
+
+  // 获取WiFi模块的IP地址
+  usart2.printf("AT+CIFSR\r\n");
+  HAL_Delay(5000);
+
+  // 建立TCP连接
+  usart2.printf("AT+CIPSTART=\"TCP\",\"192.168.31.51\",5555\r\n");
+  HAL_Delay(10000);
+
+  // 设置CIP模式为透传模式
+  usart2.printf("AT+CIPMODE=1\r\n");
+  HAL_Delay(1000);
+
+  // 开始发送数据
+  usart2.printf("AT+CIPSEND\r\n");
+  HAL_Delay(1000);
+
+  // 注释掉发送数据的代码
+  //usart2.printf("HELLO!\r\n");
+
+  // 设置接收标志
+  RECV_FLAG = 1;
+
+  // 返回0表示初始化成功
+  return 0;
 }
 
 /**

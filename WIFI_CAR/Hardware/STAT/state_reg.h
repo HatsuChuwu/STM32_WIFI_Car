@@ -5,7 +5,7 @@
 extern uint8_t STAT_BUF[64];//保存所有寄存器
 //extern uint32_t PACKET_CNT;
 #define  STAT_PACKET_LENGTH      30            //不包括包头2字节，但是包括校验码
-#define  DEVICE_ID               1
+#define  DEVICE_ID             		2
 ////////////////////////////////////////////////////////////////////////////////// 
 //以下定义了状态列表的所有状态字
 #define  HEADER0           STAT_BUF[0] //0xAA
