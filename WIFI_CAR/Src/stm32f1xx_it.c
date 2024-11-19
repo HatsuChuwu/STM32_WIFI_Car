@@ -72,11 +72,16 @@ extern UART_HandleTypeDef huart3;
 void NMI_Handler(void)
 {
   /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
+  // 用户代码开始：NonMaskableInt_IRQn 0
 
   /* USER CODE END NonMaskableInt_IRQn 0 */
+  // 用户代码结束：NonMaskableInt_IRQn 0
+
   /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
+  // 用户代码开始：NonMaskableInt_IRQn 1
 
   /* USER CODE END NonMaskableInt_IRQn 1 */
+  // 用户代码结束：NonMaskableInt_IRQn 1
 }
 
 /**
@@ -85,12 +90,16 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
+  // 用户代码开始：HardFault_IRQn中断处理0
 
   /* USER CODE END HardFault_IRQn 0 */
+  // 用户代码结束：HardFault_IRQn中断处理0
   while (1)
   {
     /* USER CODE BEGIN W1_HardFault_IRQn 0 */
+    // 用户代码开始：W1_HardFault_IRQn中断处理0
     /* USER CODE END W1_HardFault_IRQn 0 */
+    // 用户代码结束：W1_HardFault_IRQn中断处理0
   }
 }
 
