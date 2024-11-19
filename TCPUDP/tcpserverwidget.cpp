@@ -194,8 +194,8 @@ void TCPServerWidget::PrintState(QByteArray package)
 
     char *buf = package.data();
     int len = package.size();
-    unsigned int data;
-    float float_data;
+    //unsigned int data;
+    //float float_data;
     QString rbytes;
     qint16 Rcrc;
     ///检查数据包的前两个字节是否为 0xAA 和 0xCC///
@@ -214,7 +214,7 @@ void TCPServerWidget::PrintState(QByteArray package)
     {
         return;
     }
-
+/*
     //设备ID
     data = ((unsigned char)buf[POS_DEV_ID])&0xff;//从数据包位置（POS_DEV_ID）读取一个字节的数据，并将其转换为无符号整数
     rbytes = QString::number(data, 'f', 0); // 保留0位小数，即舍弃小数部分，将数据格式化为字符串
@@ -251,7 +251,6 @@ void TCPServerWidget::PrintState(QByteArray package)
     }
 
     //电池电压
-    //在这段代码中，高字节乘以256是因为在处理16位数据时，通常将数据分为高字节和低字节两部分。
     //每个字节有8位，所以16位数据需要两个字节来表示
     //当从数据包中读取电池电压的高字节和低字节时，我们需要将它们组合成一个16位的值。为了实现这一点，我们将高字节左移8位（即乘以256，因为2^8 = 256），然后加上低字节
     //在二进制表示中，左移8位相当于在数值的左侧添加8个0，这为低字节腾出了空间，使得我们可以将两个字节的值合并成一个16位的值
@@ -272,6 +271,34 @@ void TCPServerWidget::PrintState(QByteArray package)
         break;
     default:
         break;
+    }*/
+    unsigned char devId = ((unsigned char)buf[POS_DEV_ID]) & 0xff;    // 设备ID
+    unsigned char pkgCnt = ((unsigned char)buf[POS_PKG_CNT]) & 0xff;  // 包计数
+    unsigned int rawBattVolt = ((unsigned char)buf[POS_BATT_VOLT_H] * 256) + ((unsigned char)buf[POS_BATT_VOLT_L]); // 原始电压
+    float battVolt = (float)(3.3 * 2 * rawBattVolt / 4096);           // 转换为实际电压
+
+    // 使用 switch case 根据设备 ID 分配数据到对应的标签
+    switch (devId) {
+        case 1:{
+            ui->label_DEV_ID->setText(QString::number(devId)); // 设备 ID
+            ui->label_PACKET_CNT->setText(QString::number(pkgCnt)); // 包计数器
+            ui->label_BATT_VOLT->setText(QString::asprintf("%5.3f", battVolt)); // 电池电压
+            break;
+        }
+        case 2:{
+            ui->label_DEV_ID_2->setText(QString::number(devId));
+            ui->label_PACKET_CNT_2->setText(QString::number(pkgCnt));
+            ui->label_BATT_VOLT_2->setText(QString::asprintf("%5.3f", battVolt));
+            break;
+        }
+        case 3:{
+            ui->label_DEV_ID_3->setText(QString::number(devId));
+            ui->label_PACKET_CNT_3->setText(QString::number(pkgCnt));
+            ui->label_BATT_VOLT_3->setText(QString::asprintf("%5.3f", battVolt));
+            break;
+        }   
+        default:
+            break;
     }
 }
 
